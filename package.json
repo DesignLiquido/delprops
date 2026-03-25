@@ -1,0 +1,66 @@
+{
+    "name": "@designliquido/delprops",
+    "description": "Especificação e biblioteca de schemas para o formato de arquivo .delprops do ecossistema Delégua.",
+    "version": "0.0.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "author": "Leonel Sanches da Silva",
+    "contributors": [
+        {
+            "name": "Leonel Sanches da Silva",
+            "url": "https://www.linkedin.com/in/leonelsanchesdasilva/"
+        }
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/DesignLiquido/delprops/issues"
+    },
+    "homepage": "https://github.com/DesignLiquido/delprops#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DesignLiquido/delprops.git"
+    },
+    "keywords": [
+        "delegua",
+        "delprops",
+        "configuracao",
+        "properties",
+        "designliquido"
+    ],
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org/"
+    },
+    "scripts": {
+        "empacotar": "rimraf ./dist && tsc",
+        "publicar-npm": "npm publish --access public",
+        "testes-unitarios": "jest --coverage",
+        "lint": "eslint . --ext .ts",
+        "release": "release-it"
+    },
+    "release-it": {
+        "git": {
+            "commitMessage": "Lançamento de versão ${version}",
+            "tagName": "v${version}"
+        },
+        "npm": {
+            "publish": true
+        },
+        "github": {
+            "release": true
+        }
+    },
+    "devDependencies": {
+        "@types/jest": "^29.5.14",
+        "@types/node": "^22.15.21",
+        "@typescript-eslint/eslint-plugin": "^8.32.1",
+        "@typescript-eslint/parser": "^8.32.1",
+        "eslint": "^9.27.0",
+        "jest": "^29.7.0",
+        "prettier": "^3.5.3",
+        "release-it": "^17.10.0",
+        "rimraf": "^6.0.1",
+        "ts-jest": "^29.3.4",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.8.3"
+    }
+}

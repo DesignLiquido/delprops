@@ -1,0 +1,6 @@
+node_modules/
+dist/
+
+# Claude
+.claude/
+CLAUDE.md

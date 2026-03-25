@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "module": "commonjs",
+        "target": "ES2017",
+        "rootDir": "fontes",
+        "allowJs": true,
+        "sourceMap": true,
+        "declaration": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
+    },
+    "exclude": [
+        "coverage",
+        "dist/**/*",
+        "node_modules"
+    ]
+}
