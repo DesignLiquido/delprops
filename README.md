@@ -1,7 +1,7 @@
 # delprops
 
 <p align="center">
-  <img src="./recursos/imagens/delprops-logo.png" alt="delegua" width="auto" height="130px">
+  <img src="./recursos/delprops-logo.png" alt="delegua" width="auto" height="130px">
 </p>
 
 Especificação e biblioteca de análise do formato de arquivo `.delprops` — arquivo de propriedades/configuração do ecossistema [Delégua](https://github.com/DesignLiquido/delegua).
@@ -69,17 +69,17 @@ Adicione uma chave `"delprops"` ao `package.json` do pacote:
 
 ```json
 "delprops": {
-    "namespace": "liquido.dados",
-    "schema": "./delprops/dados"
+    "espacoNomes": "liquido.dados",
+    "esquema": "./delprops/dados"
 }
 ```
 
-- `namespace`: o caminho de namespace que este pacote estende.
-- `schema`: caminho relativo à raiz do pacote para o arquivo de schema (sem extensão `.js`/`.ts`).
+- `espacoNomes`: o caminho do espaço de nomes que este pacote estende.
+- `esquema`: caminho relativo à raiz do pacote para o arquivo de esquema (sem extensão `.js`/`.ts`).
 
-### 2. O arquivo de schema
+### 2. O arquivo de esquema
 
-Crie o arquivo apontado por `schema`. Ele deve exportar `default` um array de `DefinicaoPropriedade`:
+Crie o arquivo apontado por `esquema`. Ele deve exportar `default` um array de `DefinicaoPropriedade`:
 
 ```typescript
 // meu-pacote/delprops/dados.ts

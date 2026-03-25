@@ -6,9 +6,9 @@ import { DefinicaoPropriedade } from './tipos';
 
 interface ManifestoDelprops {
     /** Namespace que este pacote estende (ex: `'liquido.dados'`). */
-    namespace: string;
+    espacoNomes: string;
     /** Caminho relativo à raiz do pacote para o arquivo de schema (sem extensão). */
-    schema: string;
+    esquema: string;
 }
 
 /**
@@ -29,7 +29,9 @@ export function descobrir(caminhoNodeModules: string): void {
         if (!entrada.isDirectory()) continue;
 
         if (entrada.name.startsWith('@')) {
-            // Pacote com escopo (@org/pkg)
+            // Pacote com escopo (@org/pkg) - apenas @designliquido
+            if (entrada.name !== '@designliquido') continue;
+
             const caminhoEscopo = path.join(caminhoNodeModules, entrada.name);
             for (const sub of fs.readdirSync(caminhoEscopo, { withFileTypes: true })) {
                 if (sub.isDirectory()) {
@@ -40,6 +42,9 @@ export function descobrir(caminhoNodeModules: string): void {
                 }
             }
         } else {
+            // Apenas o pacote 'liquido'
+            if (entrada.name !== 'liquido') continue;
+
             tentarCarregar(path.join(caminhoNodeModules, entrada.name), entrada.name);
         }
     }
@@ -62,14 +67,14 @@ function tentarCarregar(caminhoPacote: string, nomePacote: string): void {
     const manifestos = Array.isArray(entrada) ? entrada : [entrada];
 
     for (const manifesto of manifestos) {
-        if (!manifesto?.namespace || !manifesto?.schema) continue;
+        if (!manifesto?.espacoNomes || !manifesto?.esquema) continue;
 
         try {
-            const caminhoSchema = path.resolve(caminhoPacote, manifesto.schema);
+            const caminhoEsquema = path.resolve(caminhoPacote, manifesto.esquema);
             // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const modulo = require(caminhoSchema);
+            const modulo = require(caminhoEsquema);
             const definicoes: DefinicaoPropriedade[] = modulo.default ?? modulo;
-            registrar(manifesto.namespace, nomePacote, definicoes);
+            registrar(manifesto.espacoNomes, nomePacote, definicoes);
         } catch {
             // Pacote declarou delprops mas o arquivo de schema não pôde ser carregado.
         }

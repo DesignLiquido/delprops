@@ -13,6 +13,8 @@
     "exclude": [
         "coverage",
         "dist/**/*",
-        "node_modules"
+        "node_modules",
+        "jest.config.ts",
+        "testes/**/*"
     ]
 }
