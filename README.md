@@ -1,5 +1,9 @@
 # delprops
 
+<p align="center">
+  <img src="./recursos/imagens/delprops-logo.png" alt="delegua" width="auto" height="130px">
+</p>
+
 Especificação e biblioteca de análise do formato de arquivo `.delprops` — arquivo de propriedades/configuração do ecossistema [Delégua](https://github.com/DesignLiquido/delegua).
 
 ## Estrutura do projeto

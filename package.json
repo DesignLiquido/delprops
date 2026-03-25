@@ -31,11 +31,11 @@
         "registry": "https://registry.npmjs.org/"
     },
     "scripts": {
-        "empacotar": "rimraf ./dist && tsc",
+        "empacotar": "yarn rimraf ./dist && tsc",
         "publicar-npm": "npm publish --access public",
-        "testes-unitarios": "jest --coverage",
-        "lint": "eslint . --ext .ts",
-        "release": "release-it"
+        "testes-unitarios": "yarn jest --coverage",
+        "lint": "yarn eslint . --ext .ts",
+        "release": "yarn release-it"
     },
     "release-it": {
         "git": {
