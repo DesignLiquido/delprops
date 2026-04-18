@@ -1,4 +1,4 @@
-import { DefinicaoPropriedade } from '../tipos';
+import { DefinicaoPropriedade } from '../interfaces';
 
 /**
  * Propriedades de uma fonte de dados nomeada (`liquido.dados.<nome>.*`).

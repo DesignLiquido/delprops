@@ -1,5 +1,5 @@
 import { registrar, obter, temRegistro, obterTodos } from '../fontes/registro';
-import { DefinicaoPropriedade } from '../fontes/tipos';
+import { DefinicaoPropriedade } from '../fontes/interfaces';
 
 describe('Módulo Registro', () => {
   beforeEach(() => {

@@ -1,9 +1,4 @@
-import { DefinicaoPropriedade } from './tipos';
-
-interface ContribuicaoEsquema {
-    pacote: string;
-    definicoes: DefinicaoPropriedade[];
-}
+import { ContribuicaoEsquema, DefinicaoPropriedade } from './interfaces';
 
 const registros = new Map<string, ContribuicaoEsquema[]>();
 

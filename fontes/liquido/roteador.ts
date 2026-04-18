@@ -1,4 +1,4 @@
-import { DefinicaoPropriedade } from '../tipos';
+import { DefinicaoPropriedade } from '../interfaces';
 
 const roteador: DefinicaoPropriedade[] = [
     {

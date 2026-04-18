@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { registrar } from './registro';
-import { DefinicaoPropriedade } from './tipos';
+import { DefinicaoPropriedade } from './interfaces';
 
 interface ManifestoDelprops {
     /** Namespace que este pacote estende (ex: `'liquido.dados'`). */

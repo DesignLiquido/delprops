@@ -1,4 +1,5 @@
-import { DefinicaoPropriedade, TipoValor } from '../fontes/tipos';
+import { TipoValor } from '../fontes/tipos';
+import { DefinicaoPropriedade } from '../fontes/interfaces';
 
 describe('Módulo Tipos', () => {
   describe('TipoValor', () => {
