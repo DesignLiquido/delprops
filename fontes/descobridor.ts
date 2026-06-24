@@ -1,8 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
 import { registrar } from './registro';
-import { DefinicaoPropriedade } from './interfaces';
+import { DefinicaoPropriedade, SistemaArquivosDescoberta } from './interfaces';
 
 interface ManifestoDelprops {
     /** Namespace que este pacote estende (ex: `'liquido.dados'`). */
@@ -17,46 +14,59 @@ interface ManifestoDelprops {
  * automaticamente seus esquemas.
  *
  * @param caminhoNodeModules Caminho absoluto para o diretório `node_modules`.
+ * @param sistemaArquivos Implementação das APIs de sistema de arquivos do ambiente.
  *
  * @example
- * import { descobrir } from '@designliquido/delprops';
- * descobrir(path.join(__dirname, 'node_modules'));
+ * import { descobrir, sistemaArquivosNode } from '@designliquido/delprops';
+ * await descobrir(path.join(__dirname, 'node_modules'), sistemaArquivosNode);
  */
-export function descobrir(caminhoNodeModules: string): void {
-    if (!fs.existsSync(caminhoNodeModules)) return;
+export async function descobrir(
+    caminhoNodeModules: string,
+    sistemaArquivos: SistemaArquivosDescoberta
+): Promise<void> {
+    if (!await sistemaArquivos.existe(caminhoNodeModules)) return;
 
-    for (const entrada of fs.readdirSync(caminhoNodeModules, { withFileTypes: true })) {
-        if (!entrada.isDirectory()) continue;
+    for (const entrada of await sistemaArquivos.listarDiretorio(caminhoNodeModules)) {
+        if (!entrada.ehDiretorio) continue;
 
-        if (entrada.name.startsWith('@')) {
+        if (entrada.nome.startsWith('@')) {
             // Pacote com escopo (@org/pkg) - apenas @designliquido
-            if (entrada.name !== '@designliquido') continue;
+            if (entrada.nome !== '@designliquido') continue;
 
-            const caminhoEscopo = path.join(caminhoNodeModules, entrada.name);
-            for (const sub of fs.readdirSync(caminhoEscopo, { withFileTypes: true })) {
-                if (sub.isDirectory()) {
-                    tentarCarregar(
-                        path.join(caminhoEscopo, sub.name),
-                        `${entrada.name}/${sub.name}`
+            const caminhoEscopo = sistemaArquivos.juntarCaminhos(caminhoNodeModules, entrada.nome);
+            for (const sub of await sistemaArquivos.listarDiretorio(caminhoEscopo)) {
+                if (sub.ehDiretorio) {
+                    await tentarCarregar(
+                        sistemaArquivos.juntarCaminhos(caminhoEscopo, sub.nome),
+                        `${entrada.nome}/${sub.nome}`,
+                        sistemaArquivos
                     );
                 }
             }
         } else {
             // Apenas o pacote 'liquido'
-            if (entrada.name !== 'liquido') continue;
+            if (entrada.nome !== 'liquido') continue;
 
-            tentarCarregar(path.join(caminhoNodeModules, entrada.name), entrada.name);
+            await tentarCarregar(
+                sistemaArquivos.juntarCaminhos(caminhoNodeModules, entrada.nome),
+                entrada.nome,
+                sistemaArquivos
+            );
         }
     }
 }
 
-function tentarCarregar(caminhoPacote: string, nomePacote: string): void {
-    const caminhoPackageJson = path.join(caminhoPacote, 'package.json');
-    if (!fs.existsSync(caminhoPackageJson)) return;
+async function tentarCarregar(
+    caminhoPacote: string,
+    nomePacote: string,
+    sistemaArquivos: SistemaArquivosDescoberta
+): Promise<void> {
+    const caminhoPackageJson = sistemaArquivos.juntarCaminhos(caminhoPacote, 'package.json');
+    if (!await sistemaArquivos.existe(caminhoPackageJson)) return;
 
     let entrada: ManifestoDelprops | ManifestoDelprops[] | undefined;
     try {
-        const packageJson = JSON.parse(fs.readFileSync(caminhoPackageJson, 'utf-8'));
+        const packageJson = JSON.parse(await sistemaArquivos.lerTexto(caminhoPackageJson));
         entrada = packageJson.delprops;
     } catch {
         return;
@@ -70,10 +80,9 @@ function tentarCarregar(caminhoPacote: string, nomePacote: string): void {
         if (!manifesto?.espacoNomes || !manifesto?.esquema) continue;
 
         try {
-            const caminhoEsquema = path.resolve(caminhoPacote, manifesto.esquema);
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const modulo = require(caminhoEsquema);
-            const definicoes: DefinicaoPropriedade[] = modulo.default ?? modulo;
+            const caminhoEsquema = sistemaArquivos.resolverCaminho(caminhoPacote, manifesto.esquema);
+            const modulo = await sistemaArquivos.carregarModulo(caminhoEsquema);
+            const definicoes = (modulo.default ?? modulo) as DefinicaoPropriedade[];
             registrar(manifesto.espacoNomes, nomePacote, definicoes);
         } catch {
             // Pacote declarou delprops mas o arquivo de schema não pôde ser carregado.

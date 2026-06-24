@@ -57,7 +57,19 @@ describe('liquido/dados', () => {
         expect(prop!.tipo).toBe('texto');
     });
 
-    it('deve ter exatamente 7 propriedades', () => {
-        expect(dados).toHaveLength(7);
+    it('deve conter propriedade "autoInicializar" do tipo logico', () => {
+        const prop = dados.find(d => d.nome === 'autoInicializar');
+        expect(prop).toBeDefined();
+        expect(prop!.tipo).toBe('logico');
+    });
+
+    it('deve conter propriedade "arquivoInicializacao" do tipo texto', () => {
+        const prop = dados.find(d => d.nome === 'arquivoInicializacao');
+        expect(prop).toBeDefined();
+        expect(prop!.tipo).toBe('texto');
+    });
+
+    it('deve ter exatamente 9 propriedades', () => {
+        expect(dados).toHaveLength(9);
     });
 });

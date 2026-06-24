@@ -1,163 +1,102 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import { descobrir } from '../fontes/descobridor';
 import { obter, obterTodos } from '../fontes/registro';
+import { SistemaArquivosDescoberta } from '../fontes/interfaces';
 
-// Mock do módulo fs
-jest.mock('fs');
+function criarSistemaArquivosMock(): jest.Mocked<SistemaArquivosDescoberta> {
+    return {
+        separadorCaminho: '/',
+        existe: jest.fn(),
+        listarDiretorio: jest.fn(),
+        lerTexto: jest.fn(),
+        juntarCaminhos: jest.fn((...partes: string[]) => partes.join('/')),
+        resolverCaminho: jest.fn((...partes: string[]) => partes.join('/')),
+        carregarModulo: jest.fn(),
+    };
+}
 
 describe('Módulo Descobridor', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Limpar registros
-    const todos = obterTodos();
-    todos.clear();
-  });
+    let sistemaArquivos: jest.Mocked<SistemaArquivosDescoberta>;
 
-  describe('descobrir', () => {
-    it('deve retornar silenciosamente se o diretório não existe', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      mockFs.existsSync.mockReturnValue(false);
-
-      expect(() => descobrir('/caminho/inexistente')).not.toThrow();
-      expect(mockFs.existsSync).toHaveBeenCalled();
+    beforeEach(() => {
+        jest.clearAllMocks();
+        sistemaArquivos = criarSistemaArquivosMock();
+        obterTodos().clear();
     });
 
-    it('deve ignorar entradas que não são diretórios', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      mockFs.existsSync.mockReturnValue(true);
+    describe('descobrir', () => {
+        it('deve retornar silenciosamente se o diretório não existe', async () => {
+            sistemaArquivos.existe.mockResolvedValue(false);
 
-      const arquivo = {
-        name: 'arquivo.txt',
-        isDirectory: () => false
-      };
+            await expect(descobrir('/caminho/inexistente', sistemaArquivos)).resolves.toBeUndefined();
+            expect(sistemaArquivos.existe).toHaveBeenCalled();
+        });
 
-      mockFs.readdirSync.mockReturnValue([arquivo] as any);
+        it('deve ignorar entradas que não são diretórios', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValue([{ nome: 'arquivo.txt', ehDiretorio: false }]);
 
-      descobrir('/caminho/node_modules');
+            await descobrir('/caminho/node_modules', sistemaArquivos);
 
-      expect(mockFs.readdirSync).toHaveBeenCalledWith('/caminho/node_modules', {
-        withFileTypes: true
-      });
+            expect(sistemaArquivos.listarDiretorio).toHaveBeenCalledWith('/caminho/node_modules');
+        });
+
+        it('deve processar pacotes com escopo @designliquido', async () => {
+            sistemaArquivos.existe.mockImplementation(async (caminho) => !caminho.includes('package.json'));
+            sistemaArquivos.listarDiretorio
+                .mockResolvedValueOnce([{ nome: '@designliquido', ehDiretorio: true }])
+                .mockResolvedValueOnce([{ nome: 'meu-pacote', ehDiretorio: true }]);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(sistemaArquivos.listarDiretorio).toHaveBeenCalledTimes(2);
+        });
+
+        it('deve ignorar outros escopos que não @designliquido', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: '@outro-escopo', ehDiretorio: true }]);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(sistemaArquivos.listarDiretorio).toHaveBeenCalledTimes(1);
+        });
+
+        it('deve processar pacote "liquido" sem escopo', async () => {
+            sistemaArquivos.existe.mockImplementation(async (caminho) => !caminho.includes('package.json'));
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'liquido', ehDiretorio: true }]);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(sistemaArquivos.listarDiretorio).toHaveBeenCalled();
+        });
+
+        it('deve ignorar pacotes que não são "liquido" ou "@designliquido"', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'outro-pacote', ehDiretorio: true }]);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(sistemaArquivos.listarDiretorio).toHaveBeenCalledTimes(1);
+        });
     });
 
-    it('deve processar pacotes com escopo @designliquido', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      mockFs.existsSync.mockReturnValue(true);
+    describe('Carregamento de manifesto', () => {
+        it('deve ignorar pacote sem package.json', async () => {
+            sistemaArquivos.existe.mockImplementation(async (caminho) => !caminho.includes('package.json'));
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'liquido', ehDiretorio: true }]);
 
-      const scopeDir = {
-        name: '@designliquido',
-        isDirectory: () => true
-      };
+            await descobrir('/caminho/node_modules', sistemaArquivos);
 
-      const packageDir = {
-        name: 'meu-pacote',
-        isDirectory: () => true
-      };
+            expect(obter('qualquer.namespace')).toEqual([]);
+        });
 
-      mockFs.readdirSync
-        .mockReturnValueOnce([scopeDir] as any)
-        .mockReturnValueOnce([packageDir] as any);
+        it('deve ignorar manifesto inválido', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'liquido', ehDiretorio: true }]);
+            sistemaArquivos.lerTexto.mockResolvedValue('{ json inválido }');
 
-      descobrir('/caminho/node_modules');
+            await descobrir('/caminho/node_modules', sistemaArquivos);
 
-      expect(mockFs.readdirSync).toHaveBeenCalledTimes(2);
+            expect(obter('qualquer.namespace')).toEqual([]);
+        });
     });
-
-    it('deve ignorar outros escopos que não @designliquido', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      mockFs.existsSync.mockReturnValue(true);
-
-      const scopeDir = {
-        name: '@outro-escopo',
-        isDirectory: () => true
-      };
-
-      mockFs.readdirSync.mockReturnValueOnce([scopeDir] as any);
-
-      descobrir('/caminho/node_modules');
-
-      // Deve ser chamado apenas uma vez (entrada inicial)
-      expect(mockFs.readdirSync).toHaveBeenCalledTimes(1);
-    });
-
-    it('deve processar pacote "liquido" sem escopo', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      mockFs.existsSync.mockReturnValue(true);
-
-      const liquidoDir = {
-        name: 'liquido',
-        isDirectory: () => true
-      };
-
-      mockFs.readdirSync.mockReturnValueOnce([liquidoDir] as any);
-
-      descobrir('/caminho/node_modules');
-
-      expect(mockFs.readdirSync).toHaveBeenCalled();
-    });
-
-    it('deve ignorar pacotes que não são "liquido" ou "@designliquido"', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      mockFs.existsSync.mockReturnValue(true);
-
-      const outroDir = {
-        name: 'outro-pacote',
-        isDirectory: () => true
-      };
-
-      mockFs.readdirSync.mockReturnValueOnce([outroDir] as any);
-
-      descobrir('/caminho/node_modules');
-
-      // Deve ser chamado apenas uma vez (entrada inicial)
-      expect(mockFs.readdirSync).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Carregamento de manifesto', () => {
-    it('deve ignorar pacote sem package.json', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-      
-      // Mock de diretórios comuns
-      mockFs.existsSync.mockImplementation((path: any) => {
-        if (typeof path === 'string') {
-          return !path.includes('package.json');
-        }
-        return true;
-      });
-
-      const packageDir = {
-        name: 'meu-pacote',
-        isDirectory: () => true
-      };
-
-      mockFs.readdirSync.mockReturnValueOnce([packageDir] as any);
-
-      descobrir('/caminho/node_modules');
-
-      // Não deve lançar erro ao processar diretório sem package.json
-      expect(obter('qualquer.namespace')).toEqual([]);
-    });
-
-    it('deve ignorar manifesto inválido', () => {
-      const mockFs = fs as jest.Mocked<typeof fs>;
-
-      // Mocking para valid package.json
-      mockFs.existsSync.mockReturnValue(true);
-
-      const packageDir = {
-        name: 'liquido',
-        isDirectory: () => true
-      };
-
-      mockFs.readdirSync.mockReturnValueOnce([packageDir] as any);
-      mockFs.readFileSync.mockReturnValue('{ json inválido }');
-
-      descobrir('/caminho/node_modules');
-
-      // Não deve lançar erro
-      expect(obter('qualquer.namespace')).toEqual([]);
-    });
-  });
 });

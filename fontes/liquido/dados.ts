@@ -41,6 +41,16 @@ const dados: DefinicaoPropriedade[] = [
         tipo: 'texto',
         detalhe: 'Nome do banco de dados.',
     },
+    {
+        nome: 'autoInicializar',
+        tipo: 'logico',
+        detalhe: 'Inicializa o banco automaticamente ao iniciar o servidor.',
+    },
+    {
+        nome: 'arquivoInicializacao',
+        tipo: 'texto',
+        detalhe: "Arquivo de inicialização do banco (padrão: 'inicializacao.lincones').",
+    },
 ];
 
 export default dados;
