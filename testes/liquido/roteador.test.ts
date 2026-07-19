@@ -70,7 +70,7 @@ describe('liquido/roteador', () => {
         expect(prop!.padrao).toBe('verdadeiro');
     });
 
-    it('deve ter exatamente 8 propriedades', () => {
-        expect(roteador).toHaveLength(8);
+    it('deve ter exatamente 9 propriedades', () => {
+        expect(roteador).toHaveLength(9);
     });
 });

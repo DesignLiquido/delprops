@@ -98,5 +98,118 @@ describe('Módulo Descobridor', () => {
 
             expect(obter('qualquer.namespace')).toEqual([]);
         });
+
+        it('deve ignorar pacote com delprops nulo', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce(
+              [{ nome: 'liquido', ehDiretorio: true }]
+            );
+            sistemaArquivos.lerTexto.mockResolvedValue(
+              JSON.stringify({ delprops: null })
+            );
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(obter('liquido.roteador')).toEqual([]);
+        });
+
+        it('deve carregar manifesto com delprops como objeto único', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce(
+              [{ nome: 'liquido', ehDiretorio: true }]
+            );
+            sistemaArquivos.lerTexto.mockResolvedValue(JSON.stringify({
+                delprops: {
+                    espacoNomes: 'liquido.roteador',
+                    esquema: './delprops/roteador'
+                }
+            }));
+            sistemaArquivos.carregarModulo.mockResolvedValue({
+                default: [
+                    { nome: 'cors', tipo: 'logico', detalhe: 'Habilita CORS.' }
+                ]
+            } as Record<string, unknown>);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            const propriedades = obter('liquido.roteador');
+            expect(propriedades).toHaveLength(1);
+            expect(propriedades[0].nome).toBe('cors');
+            expect(sistemaArquivos.carregarModulo).toHaveBeenCalled();
+        });
+
+        it('deve carregar manifesto com delprops como array', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio
+                .mockResolvedValueOnce([{ nome: '@designliquido', ehDiretorio: true }])
+                .mockResolvedValueOnce([{ nome: 'meu-pacote', ehDiretorio: true }]);
+            sistemaArquivos.lerTexto.mockResolvedValue(JSON.stringify({
+                delprops: [
+                    { espacoNomes: 'liquido.dados', esquema: './delprops/dados' },
+                    { espacoNomes: 'liquido.autenticacao', esquema: './delprops/auth' }
+                ]
+            }));
+            sistemaArquivos.carregarModulo
+                .mockResolvedValueOnce({ default: [{ nome: 'tecnologia', tipo: 'texto', detalhe: 'Tecnologia.' }] } as Record<string, unknown>)
+                .mockResolvedValueOnce({ default: [{ nome: 'segredo', tipo: 'texto', detalhe: 'Segredo.' }] } as Record<string, unknown>);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(obter('liquido.dados')).toHaveLength(1);
+            expect(obter('liquido.autenticacao')).toHaveLength(1);
+            expect(sistemaArquivos.carregarModulo).toHaveBeenCalledTimes(2);
+        });
+
+        it('deve ignorar manifesto com campos obrigatórios faltando', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'liquido', ehDiretorio: true }]);
+            sistemaArquivos.lerTexto.mockResolvedValue(JSON.stringify({
+                delprops: {
+                    espacoNomes: 'liquido.roteador'
+                    // esquema ausente
+                }
+            }));
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(obter('liquido.roteador')).toEqual([]);
+        });
+
+        it('deve lidar com erro no carregamento do módulo do esquema', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'liquido', ehDiretorio: true }]);
+            sistemaArquivos.lerTexto.mockResolvedValue(JSON.stringify({
+                delprops: {
+                    espacoNomes: 'liquido.roteador',
+                    esquema: './delprops/roteador'
+                }
+            }));
+            sistemaArquivos.carregarModulo.mockRejectedValue(new Error('Módulo não encontrado'));
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            expect(obter('liquido.roteador')).toEqual([]);
+        });
+
+        it('deve carregar manifesto usando o módulo diretamente quando não há default', async () => {
+            sistemaArquivos.existe.mockResolvedValue(true);
+            sistemaArquivos.listarDiretorio.mockResolvedValueOnce([{ nome: 'liquido', ehDiretorio: true }]);
+            sistemaArquivos.lerTexto.mockResolvedValue(JSON.stringify({
+                delprops: {
+                    espacoNomes: 'liquido.roteador',
+                    esquema: './delprops/roteador'
+                }
+            }));
+            // Módulo sem default — usa o próprio módulo como definições
+            sistemaArquivos.carregarModulo.mockResolvedValue([
+                { nome: 'cors', tipo: 'logico', detalhe: 'Habilita CORS.' }
+            ] as unknown as Record<string, unknown>);
+
+            await descobrir('/caminho/node_modules', sistemaArquivos);
+
+            const propriedades = obter('liquido.roteador');
+            expect(propriedades).toHaveLength(1);
+            expect(propriedades[0].nome).toBe('cors');
+        });
     });
 });
