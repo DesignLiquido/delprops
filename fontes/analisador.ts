@@ -1,30 +1,8 @@
-/**
- * Resultado do parse de uma linha do arquivo .delprops.
- */
-export interface PropriedadeParseada {
-    /** Chave completa, ex: "liquido.roteador.cors" */
-    chave: string;
-    /** Valor sem aspas, ex: "verdadeiro" */
-    valor: string;
-    /** Número da linha (base 1) */
-    linha: number;
-}
-
-/**
- * Erro encontrado durante o parse.
- */
-export interface ErroParse {
-    mensagem: string;
-    linha: number;
-}
-
-/**
- * Resultado completo do parse de um conteúdo .delprops.
- */
-export interface ResultadoParse {
-    propriedades: PropriedadeParseada[];
-    erros: ErroParse[];
-}
+import {
+  ResultadoCompreensaoInterface,
+  PropriedadeCompreendidaInterface,
+  ErroCompreensaoInterface
+} from "./interfaces";
 
 /**
  * Analisa (parse) o conteúdo de um arquivo .delprops.
@@ -38,9 +16,9 @@ export interface ResultadoParse {
  * @param conteudo O texto completo do arquivo .delprops.
  * @returns Um objeto com as propriedades parseadas e erros de sintaxe.
  */
-export function analisar(conteudo: string): ResultadoParse {
-    const propriedades: PropriedadeParseada[] = [];
-    const erros: ErroParse[] = [];
+export function analisar(conteudo: string): ResultadoCompreensaoInterface {
+    const propriedades: PropriedadeCompreendidaInterface[] = [];
+    const erros: ErroCompreensaoInterface[] = [];
     const linhas = conteudo.split('\n');
 
     for (let i = 0; i < linhas.length; i++) {

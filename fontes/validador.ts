@@ -1,32 +1,11 @@
-import { DefinicaoPropriedade } from './interfaces';
+import {
+  AvisoValidacaoInterface,
+  DefinicaoPropriedade,
+  ErroValidacaoInterface,
+  PropriedadeCompreendidaInterface,
+  ResultadoValidacaoInterface
+} from './interfaces';
 import { TipoValor } from './tipos';
-import { PropriedadeParseada } from './analisador';
-
-/**
- * Aviso de validação para propriedades desconhecidas.
- */
-export interface AvisoValidacao {
-    chave: string;
-    linha: number;
-    mensagem: string;
-}
-
-/**
- * Erro de validação para tipos ou valores inválidos.
- */
-export interface ErroValidacao {
-    chave: string;
-    linha: number;
-    mensagem: string;
-}
-
-/**
- * Resultado completo da validação.
- */
-export interface ResultadoValidacao {
-    avisos: AvisoValidacao[];
-    erros: ErroValidacao[];
-}
 
 /**
  * Inferir o tipo de um valor a partir de sua representação textual.
@@ -78,11 +57,11 @@ export function valorSemAspas(valor: string): string {
  * @returns Resultado com avisos e erros de validação.
  */
 export function validar(
-    propriedades: PropriedadeParseada[],
+    propriedades: PropriedadeCompreendidaInterface[],
     esquemas: Map<string, DefinicaoPropriedade[]>
-): ResultadoValidacao {
-    const avisos: AvisoValidacao[] = [];
-    const erros: ErroValidacao[] = [];
+): ResultadoValidacaoInterface {
+    const avisos: AvisoValidacaoInterface[] = [];
+    const erros: ErroValidacaoInterface[] = [];
 
     // Namespaces ordenados do mais específico ao menos específico
     // para que 'liquido.aplicacao' seja testado antes de 'liquido'
@@ -141,7 +120,7 @@ export function validar(
             avisos.push({
                 chave: prop.chave,
                 linha: prop.linha,
-                mensagem: `Propriedade '${nomePropriedade}' desconhecida no namespace '${namespaceEncontrado}'.`,
+                mensagem: `Propriedade '${nomePropriedade}' desconhecida no espaço de nomes '${namespaceEncontrado}'.`,
             });
             continue;
         }
