@@ -9,7 +9,7 @@
         "declaration": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "types": ["node"]
+        "types": ["node", "jest"]
     },
     "exclude": [
         "coverage",

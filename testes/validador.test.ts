@@ -1,6 +1,5 @@
 import { validar, inferirTipo, valorSemAspas } from '../fontes/validador';
-import { PropriedadeParseada } from '../fontes/analisador';
-import { DefinicaoPropriedade } from '../fontes/interfaces';
+import { DefinicaoPropriedade, PropriedadeCompreendidaInterface } from '../fontes/interfaces';
 
 function criarEsquemas(): Map<string, DefinicaoPropriedade[]> {
     const esquemas = new Map<string, DefinicaoPropriedade[]>();
@@ -95,7 +94,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve validar propriedade logico correta', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador.cors', valor: 'verdadeiro', linha: 1 },
             ];
 
@@ -105,7 +104,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve validar propriedade número correta', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador.porta', valor: '3000', linha: 1 },
             ];
 
@@ -115,7 +114,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve validar propriedade texto correta', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.autenticacao.tecnologia', valor: "'jwt'", linha: 1 },
             ];
 
@@ -125,7 +124,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve validar liquido.dados com sub-namespace dinâmico', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.dados.lincones.tecnologia', valor: "'sqlite'", linha: 1 },
             ];
 
@@ -135,7 +134,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve ignorar namespace não conhecido (regra 7)', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'meuapp.config.timeout', valor: '3000', linha: 1 },
             ];
 
@@ -145,7 +144,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve gerar erro para tipo incompatível', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador.cors', valor: "'sim'", linha: 1 },
             ];
 
@@ -156,7 +155,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve gerar erro para valor não permitido', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.dados.lincones.tecnologia', valor: "'mysql'", linha: 1 },
             ];
 
@@ -167,7 +166,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve gerar aviso para propriedade desconhecida', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador.timeout', valor: '3000', linha: 1 },
             ];
 
@@ -178,7 +177,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve gerar erro para valor sem tipo conhecido', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador.cors', valor: 'talvez', linha: 1 },
             ];
 
@@ -188,7 +187,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve gerar aviso para chave igual ao namespace sem propriedade', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador', valor: 'verdadeiro', linha: 1 },
             ];
 
@@ -198,7 +197,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve aceitar valor dentro dos permitidos para propriedade com valoresPermitidos', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.autenticacao.tecnologia', valor: "'jwt'", linha: 1 },
             ];
 
@@ -208,7 +207,7 @@ describe('Módulo Validador', () => {
         });
 
         it('deve processar múltiplas propriedades com diferentes resultados', () => {
-            const props: PropriedadeParseada[] = [
+            const props: PropriedadeCompreendidaInterface[] = [
                 { chave: 'liquido.roteador.cors', valor: 'verdadeiro', linha: 1 },
                 { chave: 'liquido.roteador.timeout', valor: '3000', linha: 2 },
                 { chave: 'liquido.roteador.porta', valor: "'abc'", linha: 3 },
