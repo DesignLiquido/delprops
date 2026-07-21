@@ -7,12 +7,15 @@ import {
 } from './interfaces';
 import { TipoValor } from './tipos';
 
+const REGEX_NUMERO = /^-?\d+(\.\d+)?$/;
+const NAMESPACE_DADOS = 'liquido.dados';
+
 /**
  * Inferir o tipo de um valor a partir de sua representação textual.
  *
  * - `verdadeiro` / `falso` → `'logico'`
  * - Valor entre aspas simples → `'texto'`
- * - Apenas dígitos → `'numero'`
+ * - Números (inteiros e decimais) → `'numero'`
  * - Caso contrário → `null`
  */
 export function inferirTipo(valor: string): TipoValor | null {
@@ -24,7 +27,7 @@ export function inferirTipo(valor: string): TipoValor | null {
         return 'texto';
     }
 
-    if (/^\d+$/.test(valor)) {
+    if (REGEX_NUMERO.test(valor)) {
         return 'numero';
     }
 
@@ -39,6 +42,58 @@ export function valorSemAspas(valor: string): string {
         return valor.slice(1, -1);
     }
     return valor;
+}
+
+/**
+ * Constrói mapas de lookup (nome da propriedade → definição) para cada namespace,
+ * permitindo busca O(1).
+ */
+function construirMapasLookup(
+    esquemas: Map<string, DefinicaoPropriedade[]>
+): Map<string, Map<string, DefinicaoPropriedade>> {
+    const mapas = new Map<string, Map<string, DefinicaoPropriedade>>();
+
+    for (const [namespace, definicoes] of esquemas) {
+        const mapa = new Map<string, DefinicaoPropriedade>();
+
+        for (const def of definicoes) {
+            mapa.set(def.nome, def);
+        }
+
+        mapas.set(namespace, mapa);
+    }
+
+    return mapas;
+}
+
+/**
+ * Extrai o nome da propriedade a partir da chave completa.
+ *
+ * Para namespaces com sub-namespace dinâmico (ex: `liquido.dados`),
+ * remove o segmento do sub-namespace para obter apenas o nome da propriedade.
+ *
+ * @example
+ * extrairNomePropriedade('liquido.dados', 'liquido.dados.lincones.tecnologia')
+ * // → 'tecnologia'
+ */
+function extrairNomePropriedade(
+    namespace: string,
+    chave: string
+): string {
+    if (chave === namespace) return '';
+
+    const restante = chave.slice(namespace.length + 1);
+
+    // Namespace liquido.dados tem sub-namespace dinâmico (<nome>)
+    // ex: liquido.dados.lincones.tecnologia → propriedade = 'tecnologia'
+    if (namespace === NAMESPACE_DADOS) {
+        const indicePonto = restante.indexOf('.');
+        return indicePonto >= 0
+            ? restante.slice(indicePonto + 1)
+            : '';
+    }
+
+    return restante;
 }
 
 /**
@@ -62,6 +117,7 @@ export function validar(
 ): ResultadoValidacaoInterface {
     const avisos: AvisoValidacaoInterface[] = [];
     const erros: ErroValidacaoInterface[] = [];
+    const mapasLookup = construirMapasLookup(esquemas);
 
     // Namespaces ordenados do mais específico ao menos específico
     // para que 'liquido.aplicacao' seja testado antes de 'liquido'
@@ -80,28 +136,11 @@ export function validar(
             continue;
         }
 
-        // Extrair o nome da propriedade
-        let nomePropriedade: string;
-
-        if (prop.chave === namespaceEncontrado) {
-            // Chave é exatamente o namespace (sem propriedade)
-            nomePropriedade = '';
-        } else {
-            const restante = prop.chave.slice(
-              namespaceEncontrado.length + 1
-            );
-
-            // Namespace liquido.dados tem sub-namespace dinâmico (<nome>)
-            // ex: liquido.dados.lincones.tecnologia → propriedade = 'tecnologia'
-            if (namespaceEncontrado === 'liquido.dados') {
-                const partes = restante.split('.');
-                nomePropriedade = partes.length >= 2
-                    ? partes.slice(1).join('.')
-                    : '';
-            } else {
-                nomePropriedade = restante;
-            }
-        }
+        // Extrair o nome da propriedade a partir da chave
+        const nomePropriedade = extrairNomePropriedade(
+            namespaceEncontrado,
+            prop.chave
+        );
 
         if (nomePropriedade === '') {
             avisos.push({
@@ -112,9 +151,10 @@ export function validar(
             continue;
         }
 
-        // Buscar definição da propriedade no esquema
-        const definicoes = esquemas.get(namespaceEncontrado)!;
-        const definicao = definicoes.find(d => d.nome === nomePropriedade);
+        const mapaDefinicoes = mapasLookup.get(namespaceEncontrado);
+        const definicao = mapaDefinicoes !== undefined
+          ? mapaDefinicoes.get(nomePropriedade)
+          : null;
 
         if (!definicao) {
             avisos.push({

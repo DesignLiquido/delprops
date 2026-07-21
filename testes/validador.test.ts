@@ -47,12 +47,24 @@ describe('Módulo Validador', () => {
             expect(inferirTipo('qualquer-coisa')).toBeNull();
         });
 
-        it('deve retornar null para aspas vazias', () => {
-            expect(inferirTipo("''")).toBe('texto');
+        it('deve inferir tipo numero para negativo', () => {
+            expect(inferirTipo('-1')).toBe('numero');
         });
 
-        it('deve retornar null para número negativo', () => {
-            expect(inferirTipo('-1')).toBeNull();
+        it('deve inferir tipo numero para decimal positivo', () => {
+            expect(inferirTipo('3.14')).toBe('numero');
+        });
+
+        it('deve inferir tipo numero para decimal negativo', () => {
+            expect(inferirTipo('-1.5')).toBe('numero');
+        });
+
+        it('deve inferir tipo numero para zero decimal', () => {
+            expect(inferirTipo('0.5')).toBe('numero');
+        });
+
+        it('deve retornar null para aspas vazias', () => {
+            expect(inferirTipo("''")).toBe('texto');
         });
 
         it('deve retornar null para aspa simples isolada (length < 2)', () => {
@@ -61,6 +73,10 @@ describe('Módulo Validador', () => {
 
         it('deve retornar null para aspa de abertura sem fechamento', () => {
             expect(inferirTipo("'hello")).toBeNull();
+        });
+
+        it('deve retornar null para texto não numérico', () => {
+            expect(inferirTipo('abc')).toBeNull();
         });
     });
 
