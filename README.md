@@ -12,11 +12,21 @@ Cada namespace de propriedades é representado como um arquivo `.ts` dentro de u
 
 ```
 fontes/
-├── tipos.ts              ← tipos compartilhados (TipoValor, DefinicaoPropriedade)
+├── tipos.ts                    ← TipoValor
+├── interfaces/                 ← DefinicaoPropriedade e demais contratos
+├── registro.ts                 ← registrar() / obter() / temRegistro()
+├── descobridor.ts              ← descobrir() (descoberta automática em node_modules)
+├── sistema-arquivos-node.ts    ← implementação Node de SistemaArquivosDescoberta
+├── analisador.ts                ← analisar() (parser do arquivo .delprops)
+├── validador.ts                 ← validar() (validação contra os esquemas)
 ├── liquido/
+│   ├── arquetipo.ts      ← propriedades de liquido.arquetipo
+│   ├── linguagem.ts      ← propriedades de liquido.linguagem
+│   ├── aplicacao.ts      ← propriedades de liquido.aplicacao.*
 │   ├── roteador.ts       ← propriedades de liquido.roteador.*
 │   ├── dados.ts          ← propriedades de liquido.dados.<nome>.*
 │   ├── autenticacao.ts   ← propriedades de liquido.autenticacao.*
+│   ├── estilos.ts        ← propriedades de liquido.estilos.*
 │   └── index.ts
 └── index.ts
 ```
@@ -24,10 +34,10 @@ fontes/
 Cada arquivo exporta um array de `DefinicaoPropriedade`:
 
 ```typescript
-import { DefinicaoPropriedade } from '../tipos';
+import { DefinicaoPropriedade } from '../interfaces';
 
 const roteador: DefinicaoPropriedade[] = [
-    { nome: 'cors', tipo: 'logico', detalhe: 'Habilita CORS.' },
+    { nome: 'cors', tipo: 'logico', detalhe: 'Habilita CORS.', padrao: 'falso' },
     // ...
 ];
 
@@ -37,12 +47,15 @@ export default roteador;
 O tipo `DefinicaoPropriedade` é:
 
 ```typescript
+// fontes/tipos.ts
 export type TipoValor = 'logico' | 'texto' | 'numero';
 
+// fontes/interfaces/definicao-propriedade-interface.ts
 export interface DefinicaoPropriedade {
     nome: string;
     tipo: TipoValor;
     detalhe: string;
+    padrao?: string;              // valor padrão, na mesma sintaxe do .delprops
     valoresPermitidos?: string[]; // apenas para propriedades enumeradas
 }
 ```
@@ -52,9 +65,13 @@ A raiz da biblioteca exporta tudo de forma agrupada por namespace:
 ```typescript
 import { liquido } from '@designliquido/delprops';
 
-// liquido.roteador → DefinicaoPropriedade[]
-// liquido.dados    → DefinicaoPropriedade[] (fallback genérico)
-// liquido.autenticacao → DefinicaoPropriedade[]
+// liquido.arquetipo     → DefinicaoPropriedade[]
+// liquido.linguagem     → DefinicaoPropriedade[]
+// liquido.aplicacao     → DefinicaoPropriedade[]
+// liquido.roteador      → DefinicaoPropriedade[]
+// liquido.dados         → DefinicaoPropriedade[] (fallback genérico)
+// liquido.autenticacao  → DefinicaoPropriedade[]
+// liquido.estilos       → DefinicaoPropriedade[]
 ```
 
 ---
@@ -100,13 +117,13 @@ export default dados;
 
 ### Descoberta automática
 
-Use `descobrir()` para escanear um diretório `node_modules` e registrar automaticamente todos os pacotes que declaram `"delprops"`:
+Use `descobrir()` para escanear um diretório `node_modules` e registrar automaticamente todos os pacotes que declaram `"delprops"`. É necessário fornecer uma implementação de `SistemaArquivosDescoberta` — a biblioteca já traz `sistemaArquivosNode` para uso em Node.js:
 
 ```typescript
 import path from 'path';
-import { descobrir } from '@designliquido/delprops';
+import { descobrir, sistemaArquivosNode } from '@designliquido/delprops';
 
-descobrir(path.join(__dirname, 'node_modules'));
+await descobrir(path.join(__dirname, 'node_modules'), sistemaArquivosNode);
 ```
 
 ### Registro manual
@@ -167,25 +184,84 @@ liquido.roteador.cors = verdadeiro
 
 ---
 
+## Analisando e validando arquivos `.delprops`
+
+A biblioteca expõe duas funções puras para processar o conteúdo de um arquivo `.delprops`: `analisar()` (parser) e `validar()` (validador contra os esquemas).
+
+### `analisar()`
+
+Recebe o texto do arquivo e retorna as propriedades reconhecidas e eventuais erros de sintaxe (linha sem `=`, chave ou valor vazios):
+
+```typescript
+import { analisar } from '@designliquido/delprops';
+
+const { propriedades, erros } = analisar(conteudoDoArquivo);
+// propriedades: { chave, valor, linha }[]
+// erros: { mensagem, linha }[]
+```
+
+### `validar()`
+
+Recebe as propriedades já parseadas e um mapa de `namespace → DefinicaoPropriedade[]` (por exemplo, obtido via `obter()` ou montado manualmente), e retorna avisos (propriedade desconhecida) e erros (tipo ou valor incompatível):
+
+```typescript
+import { analisar, validar, liquido } from '@designliquido/delprops';
+
+const esquemas = new Map([
+    ['liquido.roteador', liquido.roteador],
+    ['liquido.dados', liquido.dados],
+    ['liquido.autenticacao', liquido.autenticacao],
+]);
+
+const { propriedades } = analisar(conteudoDoArquivo);
+const { avisos, erros } = validar(propriedades, esquemas);
+```
+
+Namespaces fora do mapa `esquemas` são ignorados pela validação (permitindo uso por outros projetos do ecossistema). Dentro de um namespace conhecido, propriedades ausentes do esquema geram aviso; tipo ou valor incompatível geram erro.
+
+---
+
 ## Namespace `liquido`
 
 O namespace `liquido` é reservado para a configuração do framework web [Líquido](https://github.com/DesignLiquido/liquido).
+
+### `liquido.arquetipo`
+
+| Propriedade | Tipo  | Descrição                            | Valores permitidos |
+|-------------|-------|----------------------------------------|----------------------|
+| `arquetipo` | texto | Arquétipo do projeto Líquido.         | `rest`, `mvc`        |
+
+### `liquido.linguagem`
+
+| Propriedade | Tipo  | Descrição                                        | Valores permitidos    |
+|-------------|-------|-----------------------------------------------------|--------------------------|
+| `linguagem` | texto | Linguagem de programação de back-end do projeto.   | `delégua`, `pituguês` |
+
+### `liquido.aplicacao`
+
+| Propriedade    | Tipo  | Descrição                       |
+|----------------|-------|-----------------------------------|
+| `nome`         | texto | Nome da aplicação.               |
+| `versao`       | texto | Versão da aplicação.             |
+| `descricao`    | texto | Descrição da aplicação.          |
+| `licenca.nome` | texto | Nome da licença da aplicação.    |
+| `licenca.url`  | texto | URL da licença da aplicação.     |
 
 ### `liquido.roteador`
 
 Controla o comportamento do roteador HTTP.
 
-| Propriedade         | Tipo    | Descrição                                              |
-|---------------------|---------|--------------------------------------------------------|
-| `diretorioEstatico` | texto   | Caminho do diretório de arquivos estáticos.            |
-| `cors`              | lógico  | Habilita CORS.                                         |
-| `bodyParser`        | lógico  | Habilita o body-parser.                                |
-| `morgan`            | lógico  | Habilita o log de requisições com morgan.              |
-| `cookieParser`      | lógico  | Habilita o cookie-parser.                              |
-| `passport`          | lógico  | Habilita o passport para autenticação.                 |
-| `json`              | lógico  | Habilita o suporte a JSON no body.                     |
-| `helmet`            | lógico  | Habilita o helmet para segurança de cabeçalhos HTTP.   |
-| `porta`             | número  | Porta em que o servidor escutará.                      |
+| Propriedade         | Tipo    | Descrição                                              | Padrão       |
+|---------------------|---------|--------------------------------------------------------|--------------|
+| `diretorioEstatico` | texto   | Caminho do diretório de arquivos estáticos.            | `'publico'`  |
+| `cors`              | lógico  | Habilita CORS.                                         | `falso`      |
+| `bodyParser`        | lógico  | Habilita o body-parser.                                | `verdadeiro` |
+| `morgan`            | lógico  | Habilita o log de requisições com morgan.              | `falso`      |
+| `cookieParser`      | lógico  | Habilita o cookie-parser.                              | `verdadeiro` |
+| `passport`          | lógico  | Habilita o passport para autenticação.                 | `falso`      |
+| `json`              | lógico  | Habilita o suporte a JSON no body.                     | `verdadeiro` |
+| `helmet`            | lógico  | Habilita o helmet para segurança de cabeçalhos HTTP.   | `verdadeiro` |
+| `porta`             | número  | Porta na qual o servidor irá subir.                    | `3000`       |
 
 **Exemplo:**
 
@@ -216,6 +292,8 @@ Configura uma fonte de dados nomeada. `<nome>` é um identificador livre escolhi
 | `usuario`    | texto   | Nome de usuário para conexão.                                                 |
 | `senha`      | texto   | Senha para conexão.                                                           |
 | `banco`      | texto   | Nome do banco de dados.                                                       |
+| `autoInicializar`      | lógico | Inicializa o banco automaticamente ao iniciar o servidor.           |
+| `arquivoInicializacao` | texto  | Arquivo de inicialização do banco (padrão: `'inicializacao.lincones'`). |
 
 **Exemplo:**
 
@@ -253,9 +331,31 @@ liquido.autenticacao.expiracao = '7d'
 
 ---
 
+### `liquido.estilos`
+
+Configura a geração de CSS a partir de FolEs.
+
+| Propriedade      | Tipo  | Descrição                                                              | Padrão            |
+|-------------------|-------|--------------------------------------------------------------------------|--------------------|
+| `diretorioBase`   | texto | Caminho do diretório onde o CSS gerado a partir de FolEs é salvo e servido. | `'publico/css'` |
+
+**Exemplo:**
+
+```
+liquido.estilos.diretorioBase = 'publico/css'
+```
+
+---
+
 ## Exemplo completo
 
 ```
+// Metadados do projeto
+liquido.arquetipo = 'rest'
+liquido.linguagem = 'delégua'
+liquido.aplicacao.nome = 'meu-projeto'
+liquido.aplicacao.versao = '1.0.0'
+
 // Configuração de arquivos estáticos
 liquido.roteador.diretorioEstatico = 'publico'
 
@@ -267,6 +367,7 @@ liquido.roteador.cookieParser = verdadeiro
 liquido.roteador.passport = falso
 liquido.roteador.json = verdadeiro
 liquido.roteador.helmet = verdadeiro
+liquido.roteador.porta = 3000
 
 // Configuração de bases de dados
 liquido.dados.lincones.tecnologia = 'sqlite'
@@ -274,18 +375,21 @@ liquido.dados.lincones.caminho = ':memory:'
 
 // Configuração de autenticação
 liquido.autenticacao.tecnologia = 'jwt'
+
+// Configuração de estilos
+liquido.estilos.diretorioBase = 'publico/css'
 ```
 
-> **Nota:** Os schemas autoritativos de `liquido.roteador` e `liquido.autenticacao` são definidos pelo próprio pacote `liquido` em sua pasta `delprops/`. Os schemas embutidos neste pacote servem como fallback para quando `liquido` não estiver instalado.
+> **Nota:** Os schemas autoritativos de cada namespace `liquido.*` são definidos pelo próprio pacote `liquido` em sua pasta `delprops/`. Os schemas embutidos neste pacote servem como fallback para quando `liquido` não estiver instalado.
 
 ---
 
 ## Regras de validação
 
-1. Linhas em branco e comentários (`//`) são ignorados.
+1. Linhas em branco e comentários (`//`) são ignorados pelo parser (`analisar()`).
 2. Toda linha não vazia deve seguir o formato `<chave> = <valor>`. Linhas sem `=` são inválidas.
 3. Chave e valor não podem estar vazios.
-4. Para propriedades do namespace `liquido`, o caminho completo deve ser conhecido — propriedades desconhecidas geram aviso.
+4. Para propriedades do namespace `liquido`, o caminho completo deve ser conhecido — propriedades desconhecidas geram aviso (`validar()`).
 5. O tipo do valor deve corresponder ao tipo esperado pela propriedade — divergências geram erro.
-6. Propriedades com valores enumerados (como `tecnologia`) só aceitam os valores listados na tabela.
+6. Propriedades com valores enumerados (como `tecnologia`, `arquetipo`, `linguagem`) só aceitam os valores listados na tabela.
 7. Namespaces fora do conjunto conhecido (ex: `liquido`) são permitidos sem validação de esquema, para uso por outros projetos do ecossistema.
