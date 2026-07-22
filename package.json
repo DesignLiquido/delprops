@@ -4,6 +4,14 @@
     "version": "0.3.0",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "bin": {
+        "delprops": "./bin/delprops.js"
+    },
+    "files": [
+        "dist/",
+        "bin/",
+        "README.md"
+    ],
     "author": "Leonel Sanches da Silva",
     "contributors": [
         {

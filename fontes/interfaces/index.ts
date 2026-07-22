@@ -7,3 +7,5 @@ export * from './propriedade-compreendida-interface';
 export * from './resultado-compreensao-interface';
 export * from './resultado-validacao-interface';
 export * from './sistema-arquivos-descoberta-interface';
+export * from './opcoes-cli';
+export * from './sistema-cli-interface';
