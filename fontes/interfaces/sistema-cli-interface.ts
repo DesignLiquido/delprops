@@ -5,7 +5,7 @@
  * na função {@link executarCLI}, mantendo a lógica do CLI
  * independente de APIs específicas de qualquer plataforma.
  */
-export interface SistemaCLI {
+export interface SistemaCLIInterface {
     /** Argumentos da linha de comando (já sem o interpretador e caminho do script). */
     argumentos: string[];
 

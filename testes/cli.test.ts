@@ -1,15 +1,18 @@
 import { executarCLI } from '../fontes/cli';
-import { SistemaCLI, DefinicaoPropriedade } from '../fontes/interfaces';
+import {
+  SistemaCLIInterface,
+  DefinicaoPropriedade
+} from '../fontes/interfaces';
 
 function criarSistemaCLIMock(): {
-    sistema: jest.Mocked<SistemaCLI>;
+    sistema: jest.Mocked<SistemaCLIInterface>;
     saidas: string[];
     erros: string[];
 } {
     const saidas: string[] = [];
     const erros: string[] = [];
 
-    const sistema: jest.Mocked<SistemaCLI> = {
+    const sistema: jest.Mocked<SistemaCLIInterface> = {
         argumentos: [],
         lerArquivo: jest.fn(),
         diretorioAtual: jest.fn().mockReturnValue('/projeto'),

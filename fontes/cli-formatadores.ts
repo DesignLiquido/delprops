@@ -36,7 +36,7 @@ export function formatarValidacao(validacao: {
 /**
  * Formata o resultado da compreensão para exibição no terminal.
  */
-export function formatarCompreender(resultado: {
+export function formatarCompreensao(resultado: {
     propriedades: { chave: string; valor: string; linha: number }[];
     erros: { mensagem: string; linha: number }[];
 }): string {

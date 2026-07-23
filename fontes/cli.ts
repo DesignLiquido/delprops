@@ -1,9 +1,9 @@
 import { analisar } from './analisador';
 import { validar } from './validador';
-import { SistemaCLI, DefinicaoPropriedade, OpcoesCLI } from './interfaces';
+import { SistemaCLIInterface, DefinicaoPropriedade, OpcoesCLI } from './interfaces';
 import {
     formatarValidacao,
-    formatarCompreender,
+    formatarCompreensao,
     formatarEsquemas,
     formatarAjuda,
 } from './cli-formatadores';
@@ -68,7 +68,7 @@ function compreenderArgumentos(args: string[]): OpcoesCLI {
  * e escrevendo a mensagem de erro apropriada via sistema.
  */
 async function lerArquivoSeguro(
-    sistema: SistemaCLI,
+    sistema: SistemaCLIInterface,
     caminho: string
 ): Promise<string | null> {
     const caminhoAbsoluto = sistema.resolverCaminho(
@@ -93,18 +93,18 @@ async function lerArquivoSeguro(
     }
 }
 
-async function comandoAjuda(sistema: SistemaCLI): Promise<void> {
+async function comandoAjuda(sistema: SistemaCLIInterface): Promise<void> {
     sistema.escreverSaida(formatarAjuda() + '\n');
     sistema.encerrar(0);
 }
 
-async function comandoVersao(sistema: SistemaCLI): Promise<void> {
+async function comandoVersao(sistema: SistemaCLIInterface): Promise<void> {
     sistema.escreverSaida(`delprops v${versao}\n`);
     sistema.encerrar(0);
 }
 
 async function comandoEsquemas(
-    sistema: SistemaCLI,
+    sistema: SistemaCLIInterface,
     esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>
 ): Promise<void> {
     const esquemas = obterEsquemasEmbutidos();
@@ -119,7 +119,7 @@ async function comandoEsquemas(
 }
 
 async function comandoCompreender(
-    sistema: SistemaCLI,
+    sistema: SistemaCLIInterface,
     caminhoArquivo: string
 ): Promise<void> {
     const conteudo = await lerArquivoSeguro(sistema, caminhoArquivo);
@@ -129,12 +129,12 @@ async function comandoCompreender(
     }
 
     const resultado = analisar(conteudo);
-    sistema.escreverSaida(formatarCompreender(resultado) + '\n');
+    sistema.escreverSaida(formatarCompreensao(resultado) + '\n');
     sistema.encerrar(resultado.erros.length > 0 ? 1 : 0);
 }
 
 async function comandoValidar(
-    sistema: SistemaCLI,
+    sistema: SistemaCLIInterface,
     caminhoArquivo: string,
     caminhoEsquemas?: string,
     esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>
@@ -184,7 +184,7 @@ async function comandoValidar(
  *                           esquemas embutidos da biblioteca.
  */
 export async function executarCLI(
-    sistema: SistemaCLI,
+    sistema: SistemaCLIInterface,
     esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>
 ): Promise<void> {
     const opcoes = compreenderArgumentos(sistema.argumentos);

@@ -1,4 +1,4 @@
-import { DefinicaoPropriedade, SistemaCLI } from './interfaces';
+import { DefinicaoPropriedade, SistemaCLIInterface } from './interfaces';
 import * as liquidoSchemas from './liquido';
 
 /**
@@ -29,7 +29,7 @@ export function obterEsquemasEmbutidos(): Map<string, DefinicaoPropriedade[]> {
  * Retorna null em caso de erro.
  */
 export async function carregarEsquemasDeArquivo(
-    sistema: SistemaCLI,
+    sistema: SistemaCLIInterface,
     caminho: string
 ): Promise<Map<string, DefinicaoPropriedade[]> | null> {
     const caminhoAbsoluto = sistema.resolverCaminho(
