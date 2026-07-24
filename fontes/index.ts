@@ -5,4 +5,8 @@ export * from './descobridor';
 export * from './sistema-arquivos-node';
 export * from './analisador';
 export * from './validador';
+export * from './cli';
+export * from './cli-formatadores';
+export * from './cli-esquemas';
+export * from './sistema-cli-node';
 export * as liquido from './liquido';
