@@ -1,9 +1,9 @@
 import { TipoValor } from "../tipos";
 
-export interface DefinicaoPropriedade {
-    nome: string;
-    tipo: TipoValor;
-    detalhe: string;
-    padrao?: string;
-    valoresPermitidos?: string[];
+export interface DefinicaoPropriedadeInterface {
+  nome: string;
+  tipo: TipoValor;
+  detalhe: string;
+  padrao?: string;
+  valoresPermitidos?: string[];
 }

@@ -2,8 +2,8 @@ import { analisar } from "./analisador";
 import { validar } from "./validador";
 import {
   SistemaCLIInterface,
-  DefinicaoPropriedade,
-  OpcoesCLI,
+  DefinicaoPropriedadeInterface,
+  OpcoesCLIInterface,
   ErroValidacaoInterface,
 } from "./interfaces";
 import {
@@ -22,7 +22,7 @@ import pacote from "../package.json";
 
 const versao = pacote.version;
 
-function compreenderArgumentos(args: string[]): OpcoesCLI {
+function compreenderArgumentos(args: string[]): OpcoesCLIInterface {
   if (args.length === 0 || args[0] === "--ajuda") {
     return { comando: "ajuda" };
   }
@@ -119,7 +119,7 @@ async function comandoVersao(sistema: SistemaCLIInterface): Promise<void> {
 async function comandoInfo(
   sistema: SistemaCLIInterface,
   nomePropriedade: string,
-  esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>,
+  esquemasAdicionais?: Map<string, DefinicaoPropriedadeInterface[]>,
 ): Promise<void> {
   const esquemas = obterEsquemasEmbutidos();
 
@@ -127,8 +127,10 @@ async function comandoInfo(
     mesclarEsquemas(esquemas, esquemasAdicionais);
   }
 
-  const resultados: { namespace: string; definicao: DefinicaoPropriedade }[] =
-    [];
+  const resultados: {
+    namespace: string;
+    definicao: DefinicaoPropriedadeInterface;
+  }[] = [];
 
   for (const [namespace, definicoes] of esquemas) {
     for (const def of definicoes) {
@@ -144,7 +146,7 @@ async function comandoInfo(
 
 async function comandoEsquemas(
   sistema: SistemaCLIInterface,
-  esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>,
+  esquemasAdicionais?: Map<string, DefinicaoPropriedadeInterface[]>,
 ): Promise<void> {
   const esquemas = obterEsquemasEmbutidos();
 
@@ -176,7 +178,7 @@ async function comandoValidar(
   sistema: SistemaCLIInterface,
   caminhoArquivo: string,
   caminhoEsquemas?: string,
-  esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>,
+  esquemasAdicionais?: Map<string, DefinicaoPropriedadeInterface[]>,
 ): Promise<void> {
   const conteudo = await lerArquivoSeguro(sistema, caminhoArquivo);
   if (conteudo === null) {
@@ -232,7 +234,7 @@ async function comandoValidar(
  */
 export async function executarCLI(
   sistema: SistemaCLIInterface,
-  esquemasAdicionais?: Map<string, DefinicaoPropriedade[]>,
+  esquemasAdicionais?: Map<string, DefinicaoPropriedadeInterface[]>,
 ): Promise<void> {
   const opcoes = compreenderArgumentos(sistema.argumentos);
 

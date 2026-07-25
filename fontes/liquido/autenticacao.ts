@@ -1,12 +1,12 @@
-import { DefinicaoPropriedade } from '../interfaces';
+import { DefinicaoPropriedadeInterface } from "../interfaces";
 
-const autenticacao: DefinicaoPropriedade[] = [
-    {
-        nome: 'tecnologia',
-        tipo: 'texto',
-        detalhe: 'Tecnologia de autenticação.',
-        valoresPermitidos: ['jwt'],
-    },
+const autenticacao: DefinicaoPropriedadeInterface[] = [
+  {
+    nome: "tecnologia",
+    tipo: "texto",
+    detalhe: "Tecnologia de autenticação.",
+    valoresPermitidos: ["jwt"],
+  },
 ];
 
 export default autenticacao;

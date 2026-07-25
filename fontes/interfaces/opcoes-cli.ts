@@ -1,4 +1,4 @@
-export interface OpcoesCLI {
+export interface OpcoesCLIInterface {
   comando: string;
   caminhoArquivo?: string;
   caminhoEsquemas?: string;

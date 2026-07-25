@@ -1,4 +1,4 @@
-import { DefinicaoPropriedade } from "./interfaces";
+import { DefinicaoPropriedadeInterface } from "./interfaces";
 
 /**
  * Formata o resultado da validação para exibição no terminal.
@@ -67,7 +67,7 @@ export function formatarCompreensao(resultado: {
  * Formata a listagem de namespaces e propriedades disponíveis.
  */
 export function formatarEsquemas(
-  esquemas: Map<string, DefinicaoPropriedade[]>,
+  esquemas: Map<string, DefinicaoPropriedadeInterface[]>,
 ): string {
   const linhas: string[] = [];
 
@@ -97,7 +97,7 @@ export function formatarEsquemas(
  * Formata a exibição de informações de uma propriedade.
  */
 export function formatarInfo(
-  resultado: { namespace: string; definicao: DefinicaoPropriedade }[],
+  resultado: { namespace: string; definicao: DefinicaoPropriedadeInterface }[],
 ): string {
   if (resultado.length === 0) {
     return "Nenhuma propriedade encontrada com esse nome.";

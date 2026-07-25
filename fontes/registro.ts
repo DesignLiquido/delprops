@@ -1,4 +1,7 @@
-import { ContribuicaoEsquema, DefinicaoPropriedade } from './interfaces';
+import {
+  ContribuicaoEsquema,
+  DefinicaoPropriedadeInterface,
+} from "./interfaces";
 
 const registros = new Map<string, ContribuicaoEsquema[]>();
 
@@ -14,32 +17,36 @@ const registros = new Map<string, ContribuicaoEsquema[]>();
  * import dadosSqlite from '@designliquido/lincones-sqlite/delprops/dados';
  * registrar('liquido.dados', '@designliquido/lincones-sqlite', dadosSqlite);
  */
-export function registrar(namespace: string, pacote: string, definicoes: DefinicaoPropriedade[]): void {
-    if (!registros.has(namespace)) {
-        registros.set(namespace, []);
-    }
-    registros.get(namespace)!.push({ pacote, definicoes });
+export function registrar(
+  namespace: string,
+  pacote: string,
+  definicoes: DefinicaoPropriedadeInterface[],
+): void {
+  if (!registros.has(namespace)) {
+    registros.set(namespace, []);
+  }
+  registros.get(namespace)!.push({ pacote, definicoes });
 }
 
 /**
  * Retorna todas as propriedades registradas para um namespace,
  * consolidando as contribuições de todos os pacotes.
  */
-export function obter(namespace: string): DefinicaoPropriedade[] {
-    const contribuicoes = registros.get(namespace) ?? [];
-    return contribuicoes.flatMap(c => c.definicoes);
+export function obter(namespace: string): DefinicaoPropriedadeInterface[] {
+  const contribuicoes = registros.get(namespace) ?? [];
+  return contribuicoes.flatMap((c) => c.definicoes);
 }
 
 /**
  * Retorna verdadeiro se ao menos um pacote registrou esquema para o namespace.
  */
 export function temRegistro(namespace: string): boolean {
-    return registros.has(namespace) && registros.get(namespace)!.length > 0;
+  return registros.has(namespace) && registros.get(namespace)!.length > 0;
 }
 
 /**
  * Retorna o mapa completo de registros, agrupado por namespace.
  */
 export function obterTodos(): Map<string, ContribuicaoEsquema[]> {
-    return registros;
+  return registros;
 }
