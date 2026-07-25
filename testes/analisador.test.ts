@@ -129,5 +129,59 @@ describe('Módulo Analisador', () => {
             expect(resultado.propriedades).toHaveLength(1);
             expect(resultado.propriedades[0].valor).toBe("'Meu Projeto Legal'");
         });
+
+        it('deve reportar erro para chave duplicada exata', () => {
+            const resultado = analisar([
+                'liquido.roteador.cors = verdadeiro',
+                'liquido.roteador.cors = falso',
+            ].join('\n'));
+
+            expect(resultado.propriedades).toHaveLength(1);
+            expect(resultado.propriedades[0].valor).toBe('verdadeiro');
+            expect(resultado.erros).toHaveLength(1);
+            expect(resultado.erros[0]).toEqual({
+                mensagem: expect.stringContaining('Chave duplicada'),
+                linha: 2,
+            });
+            expect(resultado.erros[0].mensagem).toContain('linha 1');
+        });
+
+        it('deve reportar erro para chave duplicada entre comentários', () => {
+            const resultado = analisar([
+                'liquido.roteador.cors = verdadeiro',
+                '// um comentário',
+                'liquido.roteador.cors = falso',
+            ].join('\n'));
+
+            expect(resultado.propriedades).toHaveLength(1);
+            expect(resultado.propriedades[0].valor).toBe('verdadeiro');
+            expect(resultado.erros).toHaveLength(1);
+            expect(resultado.erros[0].linha).toBe(3);
+            expect(resultado.erros[0].mensagem).toContain('linha 1');
+        });
+
+        it('deve reportar múltiplas chaves duplicadas', () => {
+            const resultado = analisar([
+                'liquido.roteador.cors = verdadeiro',
+                'liquido.roteador.porta = 3000',
+                'liquido.roteador.cors = falso',
+                'liquido.roteador.porta = 8080',
+            ].join('\n'));
+
+            expect(resultado.propriedades).toHaveLength(2);
+            expect(resultado.erros).toHaveLength(2);
+            expect(resultado.erros[0].mensagem).toContain("liquido.roteador.cors");
+            expect(resultado.erros[1].mensagem).toContain("liquido.roteador.porta");
+        });
+
+        it('deve permitir chaves com mesmo nome em namespaces diferentes', () => {
+            const resultado = analisar([
+                'liquido.roteador.cors = verdadeiro',
+                'liquido.dados.principal.cors = falso',
+            ].join('\n'));
+
+            expect(resultado.propriedades).toHaveLength(2);
+            expect(resultado.erros).toEqual([]);
+        });
     });
 });
