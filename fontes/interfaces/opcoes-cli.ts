@@ -1,6 +1,7 @@
 export interface OpcoesCLI {
-    comando: string;
-    caminhoArquivo?: string;
-    caminhoEsquemas?: string;
-    erro?: string;
+  comando: string;
+  caminhoArquivo?: string;
+  caminhoEsquemas?: string;
+  nomePropriedade?: string;
+  erro?: string;
 }

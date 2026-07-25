@@ -330,6 +330,110 @@ describe('Módulo CLI', () => {
         });
     });
 
+    describe('comando info', () => {
+        it('deve exibir informações de uma propriedade encontrada', async () => {
+            const { sistema, saidas } = criarSistemaCLIMock();
+            sistema.argumentos = ['info', 'cors'];
+
+            await executarCLI(sistema);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(0);
+            const output = saidas.join('');
+            expect(output).toContain('Propriedade: cors');
+            expect(output).toContain('liquido.roteador');
+            expect(output).toContain('logico');
+        });
+
+        it('deve exibir informações de propriedade com valores permitidos', async () => {
+            const { sistema, saidas } = criarSistemaCLIMock();
+            sistema.argumentos = ['info', 'tecnologia'];
+
+            await executarCLI(sistema);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(0);
+            const output = saidas.join('');
+            expect(output).toContain('Propriedade: tecnologia');
+            expect(output).toContain('liquido.dados');
+            expect(output).toContain('liquido.autenticacao');
+            expect(output).toContain('Valores permitidos');
+        });
+
+        it('deve exibir informação de propriedade com valor padrão', async () => {
+            const { sistema, saidas } = criarSistemaCLIMock();
+            sistema.argumentos = ['info', 'porta'];
+
+            await executarCLI(sistema);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(0);
+            const output = saidas.join('');
+            expect(output).toContain('Propriedade: porta');
+            expect(output).toContain('Padrão:');
+        });
+
+        it('deve reportar erro quando propriedade não é encontrada', async () => {
+            const { sistema, saidas } = criarSistemaCLIMock();
+            sistema.argumentos = ['info', 'propriedade-inexistente'];
+
+            await executarCLI(sistema);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(1);
+            const output = saidas.join('');
+            expect(output).toContain('Nenhuma propriedade encontrada');
+        });
+
+        it('deve reportar erro quando nenhum nome é fornecido', async () => {
+            const { sistema, erros } = criarSistemaCLIMock();
+            sistema.argumentos = ['info'];
+
+            await executarCLI(sistema);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(1);
+            expect(erros.join('')).toContain(
+                'requer o nome de uma propriedade'
+            );
+        });
+
+        it('deve incluir esquemas adicionais na busca', async () => {
+            const { sistema, saidas } = criarSistemaCLIMock();
+            sistema.argumentos = ['info', 'tempoExpiracao'];
+
+            const adicionais = new Map<string, DefinicaoPropriedade[]>();
+            adicionais.set('liquido.cache', [
+                {
+                    nome: 'tempoExpiracao',
+                    tipo: 'numero',
+                    detalhe: 'Tempo de expiração em segundos.',
+                },
+            ]);
+
+            await executarCLI(sistema, adicionais);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(0);
+            const output = saidas.join('');
+            expect(output).toContain('tempoExpiracao');
+            expect(output).toContain('liquido.cache');
+        });
+    });
+
+    describe('comando validar com chaves duplicadas', () => {
+        it('deve reportar erro de chave duplicada durante validação', async () => {
+            const { sistema, saidas } = criarSistemaCLIMock();
+            sistema.argumentos = ['validar', 'config.delprops'];
+            sistema.existe.mockResolvedValue(true);
+            sistema.lerArquivo.mockResolvedValue([
+                'liquido.roteador.cors = verdadeiro',
+                'liquido.roteador.cors = falso',
+            ].join('\n'));
+
+            await executarCLI(sistema);
+
+            expect(sistema.encerrar).toHaveBeenCalledWith(1);
+            const output = saidas.join('');
+            expect(output).toContain('Chave duplicada');
+            expect(output).toContain('Resumo');
+        });
+    });
+
     describe('comando desconhecido', () => {
         it('deve exibir erro e sugerir --ajuda', async () => {
             const { sistema, saidas, erros } = criarSistemaCLIMock();
