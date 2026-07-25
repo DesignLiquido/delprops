@@ -1,6 +1,6 @@
-import { DefinicaoPropriedade } from "./definicao-propriedade-interface";
+import { DefinicaoPropriedadeInterface } from "./definicao-propriedade-interface";
 
 export interface ContribuicaoEsquema {
-    pacote: string;
-    definicoes: DefinicaoPropriedade[];
+  pacote: string;
+  definicoes: DefinicaoPropriedadeInterface[];
 }
