@@ -18,6 +18,7 @@
         "dist/**/*",
         "node_modules",
         "jest.config.ts",
+        "scripts/**/*",
         "testes/**/*"
     ]
 }
