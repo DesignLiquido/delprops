@@ -13,7 +13,8 @@ const config: Config = {
   ],
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }]
-  }
+  },
+  coverageReporters: ['text', 'lcov', 'json', 'html', 'text-summary'],
 };
 
 export default config;
