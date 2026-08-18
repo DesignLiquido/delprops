@@ -5,16 +5,7 @@
     "github": {
         "release": true
     },
-    "npm": {
-        "publishPath": "./dist"
-    },
     "hooks": {
-        "before:init": ["yarn empacotar"],
-        "after:bump": [
-            "yarn copyfiles -V ./package.json ./dist",
-            "yarn copyfiles -V ./README.md ./dist",
-            "yarn copyfiles \"./bin/**\" ./dist",
-            "node ./scripts/ajustar-pacote-dist.js"
-        ]
+        "before:init": ["yarn empacotar"]
     }
 }
