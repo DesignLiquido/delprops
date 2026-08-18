@@ -1,7 +1,7 @@
 {
     "name": "@designliquido/delprops",
     "description": "Especificação e biblioteca de schemas para o formato de arquivo .delprops do ecossistema Delégua.",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "bin": {
